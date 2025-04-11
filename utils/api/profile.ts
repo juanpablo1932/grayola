@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/utils/supabase/server";
 
 export async function getRole(id: string) {
@@ -10,4 +12,15 @@ export async function getRole(id: string) {
     .single();
 
   return { profile, profileError };
+}
+
+export async function getDisenadores() {
+  const supabase = await createClient();
+
+  const { data: disenadores, error: disenadoresError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "disenador");
+
+  return { disenadores, disenadoresError };
 }

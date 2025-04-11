@@ -81,9 +81,9 @@ function Login() {
             Login
           </Button>
           <div className="text-center text-sm">
-            Don&apos;t have an account?{" "}
+          ¿No tienes una cuenta?{" "}
             <a href="#" className="underline underline-offset-4">
-              Sign up
+            Regístrate
             </a>
           </div>
         </div>

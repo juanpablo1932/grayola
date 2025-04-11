@@ -52,7 +52,6 @@ function ProjectForm({
 
 
   const onSubmit = async (data: z.infer<typeof projectFormSchema>) => {
-    console.log(data)
 
     try {
 
@@ -60,7 +59,6 @@ function ProjectForm({
         data: { user },
       } = await supabase.auth.getUser()
 
-      console.log(user)
   
       if (!user) {
         toast.error("Usuario no autenticado")
@@ -76,8 +74,6 @@ function ProjectForm({
         })
         .select()
         .single()
-
-        console.log(project)
   
       if (projectError || !project) {
         toast.error("Error al crear el proyecto")
@@ -94,8 +90,6 @@ function ProjectForm({
           const { data: storageData, error: uploadError } = await supabase.storage
             .from("files") // Nombre del bucket
             .upload(filePath, file)
-
-            console.log(storageData)
   
           if (uploadError) {
             toast.error(`Error al subir: ${file.name}`)
@@ -143,9 +137,9 @@ function ProjectForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className={cn("flex flex-col gap-6", className)} {...props}>
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
+          <h1 className="text-2xl font-bold">¡Dale vida a tu idea!</h1>
           <p className="text-balance text-sm text-muted-foreground">
-            Enter your email below to login to your account
+          Cuéntanos qué diseño estás imaginando y déjanos hacerlo realidad.
           </p>
         </div>
         <div className="grid gap-6">
@@ -156,7 +150,7 @@ function ProjectForm({
               <FormItem>
                 <FormLabel>Nombre De Proyecto</FormLabel>
                 <FormControl>
-                  <Input placeholder="Project Name" {...field} />
+                  <Input placeholder="Escribe el nombre del proyecto." {...field} />
                 </FormControl>
                 <FormDescription>
                   Introduce el nombre de tu proyecto.
@@ -172,7 +166,7 @@ function ProjectForm({
               <FormItem>
                 <FormLabel>Descripción De Proyecto</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Type your message here." {...field} />
+                  <Textarea placeholder="Describenos que tienes en mente." {...field} />
                 </FormControl>
                 <FormDescription>
                 Ingresa la descripción de tu proyecto.
@@ -184,13 +178,17 @@ function ProjectForm({
           <FormField
             control={form.control}
             name="files"
-            render={({ field: { onChange } }) => (
+            render={({ field: { onChange, ref } }) => (
               <FormItem>
                 <FormLabel>Archivos</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
                     multiple
+                    ref={(el) => {
+                      ref(el)
+                      fileInputRef.current = el
+                    }}
                     onChange={(e) => onChange(e.target.files)}
                   />
                 </FormControl>
