@@ -1,8 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-
+import { getRole } from "@/utils/api/profile";
 import { createClient } from "@/utils/supabase/server";
 
 interface LoginFormData {
@@ -13,39 +12,38 @@ interface LoginFormData {
 export async function login(formData: LoginFormData) {
   const supabase = await createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { error, data: authData } = await supabase.auth.signInWithPassword({
     email: formData.email,
     password: formData.password,
-  };
-
-  const { error } = await supabase.auth.signInWithPassword(data);
+  });
 
   if (error) {
     redirect("/error");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/account");
-}
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export async function signup(formData: FormData) {
-  const supabase = await createClient();
-
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
-
-  const { error } = await supabase.auth.signUp(data);
-
-  if (error) {
+  if (!user) {
     redirect("/error");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/account");
+  const { profile, profileError } = await getRole(user.id);
+
+  if (profileError || !profile) {
+    redirect("/error");
+  }
+
+  switch (profile.role) {
+    case "cliente":
+      redirect("/create");
+    case "project_manager":
+      redirect("/admin");
+    case "disenador":
+      redirect("/projects");
+    default:
+      redirect("/error");
+  }
 }
