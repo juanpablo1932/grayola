@@ -24,3 +24,15 @@ export async function getDisenadores() {
 
   return { disenadores, disenadoresError };
 }
+
+export async function getUserById(id: string) {
+  const supabase = await createClient();
+
+  const { data: profile, error: userError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  return { profile, userError };
+}

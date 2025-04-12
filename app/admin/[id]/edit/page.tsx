@@ -9,8 +9,6 @@ interface Props {
 async function editPage(
   { params }: Props,
 ) {
-
-  console.log("Params", params)
   const supabase = await createClient()
 
   const { data: project, error } = await supabase
@@ -19,17 +17,15 @@ async function editPage(
     .eq("id", params.id)
     .single()
 
-    console.log("Project", project)
-    console.log("Error", error)
-
   if (error || !project) {
     return notFound()
   }
   return (     
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Editar Proyecto</h1>
+    <div className="flex gap-20 max-w-2xl mx-auto min-h-svh flex-col justify-center p-6 md:p-10">
+      <h1 className="text-2xl font-bold mb-4 text-center">Editar Proyecto</h1>
       <EditProjectForm project={project} />
-    </div> );
+    </div> 
+  );
 }
 
 export default editPage;

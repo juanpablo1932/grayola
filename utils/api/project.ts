@@ -33,6 +33,17 @@ export async function getProjects() {
   return { projects, projectsError };
 }
 
+export async function getProjectsByUserId(userId: string) {
+  const supabase = await createClient();
+
+  const { data: projects, error: projectsError } = await supabase
+    .from("projects")
+    .select("*, project_files(*)")
+    .eq("designer_id", userId);
+
+  return { projects, projectsError };
+}
+
 export async function assignDesignerToProject(
   projectId: string,
   designerId: string
