@@ -6,7 +6,7 @@ interface Props {
   params: { id: string }
 }
 
-async function editPage(
+export default async function editPage(
   { params }: Props,
 ) {
   const supabase = await createClient()
@@ -27,5 +27,3 @@ async function editPage(
     </div> 
   );
 }
-
-export default editPage;
