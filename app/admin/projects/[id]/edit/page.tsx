@@ -3,18 +3,18 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 
 interface Props {
-  params: { id: string }
-}
+  params: Promise<{ id: string }>}
 
 export default async function editPage(
   { params }: Props,
 ) {
   const supabase = await createClient()
+  const { id } = await params
 
   const { data: project, error } = await supabase
     .from("projects")
     .select("*, project_files(*)")
-    .eq("id", params.id)
+    .eq("id", id)
     .single()
 
   if (error || !project) {
