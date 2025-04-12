@@ -100,7 +100,7 @@ export const columns: ColumnDef<Project>[] = [
             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/admin/${row.original.id}/edit`}>
+              <Link href={`/admin/projects/${row.original.id}/edit`}>
                 Editar Proyecto
               </Link>
             </DropdownMenuItem>
