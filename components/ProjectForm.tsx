@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -14,11 +14,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/utils/supabase/client"
-import { toast } from "sonner"
-import { useRef } from "react"
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
+import { useRef, useTransition } from "react";
 
 export const projectFormSchema = z.object({
   name: z.string().min(1, {
@@ -32,114 +32,116 @@ export const projectFormSchema = z.object({
     .refine((files) => files instanceof FileList && files.length > 0, {
       message: "Debes adjuntar al menos un archivo.",
     }),
-})
-
+});
 
 function ProjectForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
   const supabase = createClient();
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<z.infer<typeof projectFormSchema>>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
       name: "",
       description: "",
     },
-  })
+  });
 
-
+  const [isPending, startTransition] = useTransition();
 
   const onSubmit = async (data: z.infer<typeof projectFormSchema>) => {
+    startTransition(async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-    try {
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-  
-      if (!user) {
-        toast.error("Usuario no autenticado")
-        return
-      }
-  
-      const { data: project, error: projectError } = await supabase
-        .from("projects")
-        .insert({
-          title: data.name,
-          description: data.description,
-          client_id: user.id
-        })
-        .select()
-        .single()
-  
-      if (projectError || !project) {
-        toast.error("Error al crear el proyecto")
-        return
-      }
-  
-      //Subir los archivos
-      const files = Array.from(data.files as FileList)
-  
-      const archivosParaInsertar = await Promise.all(
-        files.map(async (file) => {
-          const filePath = `${project.id}/${file.name}`
-  
-          const { data: storageData, error: uploadError } = await supabase.storage
-            .from("files") // Nombre del bucket
-            .upload(filePath, file)
-  
-          if (uploadError) {
-            toast.error(`Error al subir: ${file.name}`)
-            return null
-          }
-  
-          return {
-            project_id: project.id,
-            file_name: file.name,
-            file_path: storageData.path
-          }
-        })
-      )
-  
-      // Insertar registros en `project_files`
-      const filesToInsert = archivosParaInsertar.filter(Boolean)
-  
-      if (filesToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from("project_files")
-          .insert(filesToInsert)
-  
-        if (insertError) {
-          toast.warning("Proyecto creado, pero no se guardaron los archivos.")
-        } else {
-          toast.success("Proyecto creado con éxito ✅")
+        if (!user) {
+          toast.error("Usuario no autenticado");
+          return;
         }
-      } else {
-        toast.success("Proyecto creado sin archivos adjuntos")
-      }
-  
-      form.reset()
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
-    } catch (err) {
-      console.error(err)
-      toast.error("Ocurrió un error inesperado")
-    }
-  }
-  
 
+        const { data: project, error: projectError } = await supabase
+          .from("projects")
+          .insert({
+            title: data.name,
+            description: data.description,
+            client_id: user.id,
+          })
+          .select()
+          .single();
 
-  return ( 
+        if (projectError || !project) {
+          toast.error("Error al crear el proyecto");
+          return;
+        }
+
+        //Subir los archivos
+        const files = Array.from(data.files as FileList);
+
+        const archivosParaInsertar = await Promise.all(
+          files.map(async (file) => {
+            const filePath = `${project.id}/${file.name}`;
+
+            const { data: storageData, error: uploadError } =
+              await supabase.storage
+                .from("files") // Nombre del bucket
+                .upload(filePath, file);
+
+            if (uploadError) {
+              toast.error(`Error al subir: ${file.name}`);
+              return null;
+            }
+
+            return {
+              project_id: project.id,
+              file_name: file.name,
+              file_path: storageData.path,
+            };
+          })
+        );
+
+        // Insertar registros en `project_files`
+        const filesToInsert = archivosParaInsertar.filter(Boolean);
+
+        if (filesToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from("project_files")
+            .insert(filesToInsert);
+
+          if (insertError) {
+            toast.warning(
+              "Proyecto creado, pero no se guardaron los archivos."
+            );
+          } else {
+            toast.success("Proyecto creado con éxito ✅");
+          }
+        } else {
+          toast.success("Proyecto creado sin archivos adjuntos");
+        }
+
+        form.reset();
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Ocurrió un error inesperado");
+      }
+    });
+  };
+
+  return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={cn("flex flex-col gap-6", className)} {...props}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={cn("flex flex-col gap-6", className)}
+        {...props}>
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-2xl font-bold">¡Dale vida a tu idea!</h1>
           <p className="text-balance text-sm text-muted-foreground">
-          Cuéntanos qué diseño estás imaginando y déjanos hacerlo realidad.
+            Cuéntanos qué diseño estás imaginando y déjanos hacerlo realidad.
           </p>
         </div>
         <div className="grid gap-6">
@@ -150,7 +152,10 @@ function ProjectForm({
               <FormItem>
                 <FormLabel>Nombre De Proyecto</FormLabel>
                 <FormControl>
-                  <Input placeholder="Escribe el nombre del proyecto." {...field} />
+                  <Input
+                    placeholder="Escribe el nombre del proyecto."
+                    {...field}
+                  />
                 </FormControl>
                 <FormDescription>
                   Introduce el nombre de tu proyecto.
@@ -166,10 +171,13 @@ function ProjectForm({
               <FormItem>
                 <FormLabel>Descripción De Proyecto</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Describenos que tienes en mente." {...field} />
+                  <Textarea
+                    placeholder="Describenos que tienes en mente."
+                    {...field}
+                  />
                 </FormControl>
                 <FormDescription>
-                Ingresa la descripción de tu proyecto.
+                  Ingresa la descripción de tu proyecto.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -186,8 +194,8 @@ function ProjectForm({
                     type="file"
                     multiple
                     ref={(el) => {
-                      ref(el)
-                      fileInputRef.current = el
+                      ref(el);
+                      fileInputRef.current = el;
                     }}
                     onChange={(e) => onChange(e.target.files)}
                   />
@@ -199,8 +207,8 @@ function ProjectForm({
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">
-            Crear Proyecto
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? "Creando Proyecto..." : "Crear Proyecto"}
           </Button>
         </div>
       </form>

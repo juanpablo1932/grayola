@@ -1,10 +1,10 @@
-"use client"
- 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
- 
-import { Button } from "@/components/ui/button"
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,9 +13,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { login } from "@/app/login/actions"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { login } from "@/app/login/actions";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -24,7 +24,7 @@ const formSchema = z.object({
   password: z.string().regex(/^(?=.*[a-zA-Z])(?=.*\d)/, {
     message: "La contraseña debe contener letras y números.",
   }),
-})
+});
 
 function Login() {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -33,7 +33,7 @@ function Login() {
       email: "",
       password: "",
     },
-  })
+  });
 
   return (
     <Form {...form}>
@@ -70,9 +70,7 @@ function Login() {
                 <FormControl>
                   <Input type="password" placeholder="Contraseña" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Introduce tu contraseña.
-                </FormDescription>
+                <FormDescription>Introduce tu contraseña.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -81,15 +79,15 @@ function Login() {
             Login
           </Button>
           <div className="text-center text-sm">
-          ¿No tienes una cuenta?{" "}
+            ¿No tienes una cuenta?{" "}
             <a href="#" className="underline underline-offset-4">
-            Regístrate
+              Regístrate
             </a>
           </div>
         </div>
       </form>
     </Form>
-   );
+  );
 }
 
 export default Login;
